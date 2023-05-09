@@ -1,18 +1,25 @@
 import argparse
-import pathlib
-import signal
 import subprocess
+import signal
+import pathlib
+import logging
 from typing import Dict
-
 from PIL import Image
+
+# Configure logging settings
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class FFMPEGException(Exception):
     pass
 
+class FFMPEGNotFound(FFMPEGException):
+    pass
 
 def sample_video(file_path: str, 
-         output_path: str,step_time: int=1, threads: int=0) -> Dict[str, Image.Image]:
+         output_path: str,step_time: int=1, threads: int=0,
+         sort: bool=True) -> Dict[str, Image.Image]:
     output = pathlib.Path(output_path)
     output.mkdir(exist_ok=True)
 
@@ -35,19 +42,23 @@ def sample_video(file_path: str,
         "2",
         str(output / "%d.jpg")  # output file pattern
     ]
-    worker = subprocess.Popen(list(map(str, args)))
+    #worker = subprocess.Popen(list(map(str, args)))
+    worker = subprocess.Popen(list(map(str, args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # stop workers if current process is stopped via (Ctrl+C)
-    signal.signal(signal.SIGINT, lambda *_: worker.terminate())
-
-    worker.wait()
+    stdout, stderr = worker.communicate()
     if worker.returncode != 0:
+        logger.error("Error: %s", stderr.decode())  # Log the error message
         raise FFMPEGException()
+    else:
+        logger.info("Output: %s", stdout.decode())
 
     res = dict()
     for img_path in output.glob('*.jpg'):
         index = int(img_path.stem)
         res[index] = Image.open(img_path)
+    if sort:
+        res = {key: res[key] for key in sorted(res.keys())}
     return res
 
 

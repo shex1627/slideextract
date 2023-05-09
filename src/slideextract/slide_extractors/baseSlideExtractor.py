@@ -13,34 +13,31 @@ import logging
 import io
 from typing import List, Dict
 
-from slide_segmentation.ocr.ocr_process import docDiffBuilder, textract_resp_to_paragraph
-from slide_segmentation.ocr.config import doc_diff_comparator, new_slide_clf, feature_names
+from slideextract.config import ocr_feature_names, ocr_new_slide_clf
+from slideextract.comparator.docDiffBuilder import docDiffBuilder, doc_diff_comparator
+from slideextract.processing.ffmpeg_sample_video import sample_video
 
 
 logger = logging.getLogger('baseSlide')
 
-def _compute_phash(idx, prev_img: np.array, curr_img: np.array):
-    phash = imagehash.phash(curr_img)
-    prev_phash = imagehash.phash(prev_img)
-    return (idx, phash - prev_phash)
-
 class BaseSlideExtractor:
+    """
+    base class for slide extractor,
+    all slide extractor should inherit from this class
+    have general methods to extract images from video
+    compare slides based on imagebased feature and ocr feature
+    """
     def __init__(self, *args, **kwargs) -> None:
         pass 
 
-    def _compute_phash_difference(self, img_dict: Dict[int, np.ndarray], n_jobs = 1) -> pd.DataFrame:
-        if n_jobs > 1:
-            with mp.Pool(n_jobs) as pool:
-                print("start computing phash Pool")
-                results = pool.starmap(_compute_phash, [(i, img_dict[i-1], img_dict[i]) for i in range(1, len(img_dict))])
-        else:
-            results = [_compute_phash(i, img_dict[i-1], img_dict[i]) for i in range(1, len(img_dict))]
-
-        df = pd.DataFrame(results, columns=["index", "phash_diff"])
-        df.set_index("index", inplace=True)
-        return df
-
     def extract_slides(self, mp4_file_path: str):
+        NotImplementedError
+
+    def extract_slides_from_file(self, mp4_file_path: str, threads: int = 0):
+        frames_data = sample_video(mp4_file_path, threads=threads)
+        return self.extract_slides_from_frames(frames_data)
+
+    def extract_slides_from_frames(self, frames_data: dict):
         NotImplementedError
 
     def _generate_ocr_doc_feature(self, ocr_paragraph1: str, ocr_paragraph2: str, doc_diff_comparator: docDiffBuilder=doc_diff_comparator):
@@ -54,7 +51,7 @@ class BaseSlideExtractor:
         # need to test if dataframe results results
         feature_df = pd.DataFrame([doc_compare_dict])
         feature_df = feature_df.rename(columns={'letter_dis':'letter_dissim'})
-        return feature_df[feature_names] 
+        return feature_df[ocr_feature_names] 
     
     def _compare_ocr_results(self, ocr_slide_indices: List, ocr_paragraphs: Dict, clf_model) -> pd.DataFrame:
         ocr_slide_record = []
@@ -63,7 +60,7 @@ class BaseSlideExtractor:
                 feature_df = \
                     self._generate_ocr_doc_feature(
                         ocr_paragraph1=ocr_paragraphs[index], ocr_paragraph2=ocr_paragraphs[index-1])
-                ocr_is_new_slide = new_slide_clf.predict(feature_df)[0]
+                ocr_is_new_slide = ocr_new_slide_clf.predict(feature_df)[0]
                 ocr_slide_record.append((index, ocr_is_new_slide))
 
         ocr_new_slide_df = pd.DataFrame(ocr_slide_record)

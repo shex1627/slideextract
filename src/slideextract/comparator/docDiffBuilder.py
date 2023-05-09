@@ -134,3 +134,9 @@ def get_diff_df(test_ocr_result: dict):
 
     diff_df = pd.DataFrame.from_dict(diff_dict, orient='index').reset_index()
     return diff_df
+
+doc_diff_comparator = docDiffBuilder().\
+        add_metric("jaccard_letter", jaccard_letter_dissim).\
+        add_metric("jaccard", jaccard_str).\
+        add_metric("letter_dis",letter_dissim).\
+        add_metric("word_dis", word_dissim)
