@@ -49,6 +49,7 @@ class textractOcr(OcrEngine):
     
         for chunk in chunks:
             try:
+                logger.info(f"starting textract jobs for chunk of size {len(chunk)}")
                 image_to_job_ids = self._start_textract_jobs(chunk)
                 job_results = self._wait_for_jobs_and_get_results(image_to_job_ids)
                 results.update(job_results)

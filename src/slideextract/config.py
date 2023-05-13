@@ -18,6 +18,7 @@ WORD_CT_THRESHOLD = 5
 DHASH_THRESHOLD = 10
 DHASH_PERCENTILE = 0.95
 
+DATA_FILE_PATH = os.environ.get("DATA_FILE_PATH", "C:\\Users\\alistar\\Desktop\\ds\\slideextract\\data")
 YOUTUBE_VIDEO_DOWNLOAD_PATH = os.environ.get("YOUTUBE_VIDEO_DOWNLOAD_PATH", "./youtube_downloads")
 SLIDE_EXTRACT_OUTPUT_BUCKET_NAME = os.environ.get("SLIDE_EXTRACT_OUTPUT_BUCKET_NAME", "slide-extract-output")
 VALID_YOUTUBE_CHANNELS = ['PyData', 'Open Data Science', 'Kaggle', 'AWS Online Tech Talks', 'Microsoft Ignite', 'Microsoft']

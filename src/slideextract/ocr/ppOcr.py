@@ -4,6 +4,7 @@ from typing import List, Dict
 from functools import partial
 import logging
 from slideextract.ocr.ocrEngine import OcrEngine
+from slideextract.processing.util import image_to_array_gray
 
 logger = logging.getLogger('paddleOcr')
 
@@ -13,17 +14,25 @@ class ppOcr(OcrEngine):
         return
 
     def ocr(self, image: Image.Image, to_paragraph: bool=True):
-        ocr_result = self.ocr_engine.ocr(image)
+        img_array = image_to_array_gray(image)
+        ocr_result = self.ocr_engine.ocr(img_array)
         if to_paragraph:
             return self.to_paragraph(ocr_result)
         return ocr_result
     
-    def ocr_batch(self, image_list: list, to_paragraph: bool=True):
+    def ocr_batch(self, image_list: list, to_paragraph: bool=False):
         """
         ocr a list of images
         """
-        func = partial(self.ocr, to_paragraph=to_paragraph)
-        ocr_results = list(map(func, image_list))
+        if isinstance(image_list, dict):
+            ocr_results = {}
+            for key, value in image_list.items():
+                result = self.ocr(value, to_paragraph=to_paragraph)
+                ocr_results[key] = result
+        else:
+            func = partial(self.ocr, to_paragraph=to_paragraph)
+            ocr_results = list(map(func, image_list))
+        
         return ocr_results
         
     def to_paragraph(self, ocr_result, threshold: float = 0.9, delimiter: str = " \n") -> str:

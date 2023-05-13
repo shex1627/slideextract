@@ -2,6 +2,7 @@ import argparse
 import subprocess
 import signal
 import pathlib
+import os
 import logging
 from typing import Dict
 from PIL import Image
@@ -21,7 +22,8 @@ def sample_video(file_path: str,
          output_path: str,step_time: int=1, threads: int=0,
          sort: bool=True) -> Dict[str, Image.Image]:
     output = pathlib.Path(output_path)
-    output.mkdir(exist_ok=True)
+    #output.mkdir(exist_ok=True)
+    os.makedirs(output_path, exist_ok=True)
 
     args = [
         "ffmpeg",

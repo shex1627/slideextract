@@ -10,16 +10,18 @@ import pandas as pd
 import imagehash
 import multiprocessing as mp
 import logging
-import io
+import os
+from dataclasses import dataclass, field
 from typing import List, Dict
 
-from slideextract.config import ocr_feature_names, ocr_new_slide_clf
+from slideextract.config import ocr_feature_names, ocr_new_slide_clf, DATA_FILE_PATH
 from slideextract.comparator.docDiffBuilder import docDiffBuilder, doc_diff_comparator
 from slideextract.processing.ffmpeg_sample_video import sample_video
 
 
 logger = logging.getLogger('baseSlide')
 
+@dataclass
 class BaseSlideExtractor:
     """
     base class for slide extractor,
@@ -27,6 +29,9 @@ class BaseSlideExtractor:
     have general methods to extract images from video
     compare slides based on imagebased feature and ocr feature
     """
+    name = "baseSlideExtractor"
+    data_file_path = None
+
     def __init__(self, *args, **kwargs) -> None:
         pass 
 
@@ -34,7 +39,9 @@ class BaseSlideExtractor:
         NotImplementedError
 
     def extract_slides_from_file(self, mp4_file_path: str, threads: int = 0):
-        frames_data = sample_video(mp4_file_path, threads=threads)
+        self.data_file_path = os.path.join(DATA_FILE_PATH, os.path.basename(mp4_file_path).split(".")[0], self.name)
+        output_path = os.path.join(self.data_file_path, "frames")
+        frames_data = sample_video(mp4_file_path, output_path=output_path, threads=threads)
         return self.extract_slides_from_frames(frames_data)
 
     def extract_slides_from_frames(self, frames_data: dict):
