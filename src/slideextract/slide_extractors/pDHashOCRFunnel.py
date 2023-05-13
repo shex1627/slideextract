@@ -105,7 +105,8 @@ class PDHashOCRFunnel(BaseSlideExtractor):
         hash_ocr_combined_df.to_csv(os.path.join(self.data_file_path,'hash_ocr_combined_df.csv'), index=False)
 
         combined_df = hash_ocr_combined_df.query("ocr_is_new_slide").copy()
-        combined_df['duration'] = combined_df.copy()['index'].diff(1).fillna(combined_df['index'].min())
+        combined_df['duration'] = combined_df['index'].diff(-1).fillna(combined_df['index'].min()) * -1
+        combined_df.loc[0,'duration'] = combined_df['index'].min()
         combined_df['duration_str'] = combined_df['duration'].apply(lambda duration: str(duration//60) + 'min' + str(duration%60)+"s")
         combined_df['enough_words_in_slide'] = combined_df['img_word_ct'] >= self.word_ct_threshold
         combined_df['enough_duration_in_slide'] = combined_df['duration'] >= self.duration_threshold
@@ -145,16 +146,16 @@ class PDHashOCRFunnel(BaseSlideExtractor):
         """
         filename = os.path.basename(mp4_file_path).split(".")[0]
         data_file_path = os.path.join(DATA_FILE_PATH, filename, self.name)
-        if data_file_path:
-            if not os.path.join(data_file_path, "slide_hash_df.csv"):
+        if os.path.exists(data_file_path):
+            if not os.path.exists(os.path.join(data_file_path, "slide_hash_df.csv")):
                 return False
-            if not os.path.join(data_file_path, "ocr_paragraphs.json"):
+            if not os.path.exists(os.path.join(data_file_path, "ocr_paragraphs.json")):
                 return False
-            if not os.path.join(data_file_path, "hash_ocr_combined_df.csv"):
+            if not os.path.exists(os.path.join(data_file_path, "hash_ocr_combined_df.csv")):
                 return False
-            if not os.path.join(data_file_path, "combined_df.csv"):
+            if not os.path.exists(os.path.join(data_file_path, "combined_df.csv")):
                 return False
-            if not os.path.join(data_file_path, "new_slide_images"):
+            if not os.path.exists(os.path.join(data_file_path, "new_slide_images")):
                 return False
             return True
         else:

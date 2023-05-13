@@ -38,9 +38,6 @@ class PDHashExtractor(BaseSlideExtractor):
     new_slide_images: dict = field(default_factory=dict)
     name: str = "pdhash"
     
-    def __init__(self):
-        super().__init__()
-        
 
     def extract_slides_from_frames(self, frames_data: dict):
         if self.data_file_path is None:
@@ -70,6 +67,7 @@ class PDHashExtractor(BaseSlideExtractor):
 
         slide_hash_df['hash_is_new_slide'] = (slide_hash_df['phash'] > final_phash_threshold) | (slide_hash_df['dhash'] > DHASH_THRESHOLD)
         hash_new_slide_df = slide_hash_df.query("hash_is_new_slide")
+        hash_new_slide_df['is_new_slide'] = True
         hash_new_slide_indices = hash_new_slide_df ['index'].tolist()
         logger.info(f"{len(hash_new_slide_indices)} new slides defined by phash")
         self.hash_df = slide_hash_df
@@ -77,10 +75,19 @@ class PDHashExtractor(BaseSlideExtractor):
         # export hash_df to csv
         slide_hash_df.to_csv(os.path.join(self.data_file_path,'slide_hash_df.csv'), index=False)
 
-        self.hash_df['is_new_slide'] = self.hash_df['hash_is_new_slide']
+        #self.hash_df['is_new_slide'] = self.hash_df['hash_is_new_slide']
 
+        combined_df = hash_new_slide_df.copy()
+        combined_df['duration'] = combined_df['index'].diff(-1).fillna(0) * -1
+        combined_df.loc[0,'duration'] = combined_df['index'].min()
+        combined_df['duration_str'] = combined_df['duration'].apply(lambda duration: str(duration//60) + 'min' + str(duration%60)+"s")
+        combined_df = combined_df.dropna()
 
-        new_slide_indices = list(self.hash_df.query("is_new_slide").index)
+        # export combined_df to csv
+        self.combined_df = combined_df
+        combined_df.to_csv(os.path.join(self.data_file_path,'combined_df.csv'), index=False)
+
+        new_slide_indices = self.combined_df.query("is_new_slide")['index'].tolist()
         logger.info(f"{len(new_slide_indices)} new slides defined by phash and dhash")
         new_slide_images = dict(filter(lambda record: record[0] in new_slide_indices, frames_data.items()))
         self.new_slide_images = new_slide_images
@@ -107,7 +114,20 @@ class PDHashExtractor(BaseSlideExtractor):
         return False if not exists
         """
         filename = os.path.basename(mp4_file_path).split(".")[0]
-        return os.path.exists(os.path.join(DATA_FILE_PATH, filename))
+        data_file_path = os.path.join(DATA_FILE_PATH, filename, self.name)
+        if os.path.exists(data_file_path):
+            print("data_file_path exists")
+            if not os.path.exists(os.path.join(data_file_path, "slide_hash_df.csv")):
+                return False
+            print("slide_hash_df.csv exists")
+            if not os.path.exists(os.path.join(data_file_path, "config.json")):
+                return False
+            if not os.path.exists(os.path.join(data_file_path, "combined_df.csv")):
+                return False
+            print("new_slide_images exists")
+            return True
+        else:
+            return False
     
     def load_slide_extract_output(self, mp4_file_path: str) -> None:
         """
@@ -125,6 +145,10 @@ class PDHashExtractor(BaseSlideExtractor):
             slide_hash_df = pd.read_csv(os.path.join(self.data_file_path,'slide_hash_df.csv'))
             slide_hash_df.index = slide_hash_df['index']
             self.slide_hash_df = slide_hash_df
+
+            # load combined_df
+            combined_df = pd.read_csv(os.path.join(self.data_file_path,'combined_df.csv'))
+            self.combined_df = combined_df
 
             # load new_slide_images
             new_slide_images = {}
