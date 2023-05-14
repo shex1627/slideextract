@@ -127,6 +127,7 @@ def app():
         st.session_state['show_image_files'] = show_image_files
         st.session_state['slide_extractor'] = slide_extractor
     if st.session_state.get('show_image_files') and st.session_state.get('slide_extractor'):
+        st.session_state.get('slide_extractor').combined_df.index = st.session_state.get('slide_extractor').combined_df['index']
         metadata_dict = st.session_state.get('slide_extractor').combined_df.to_dict('index')
         show_image_files = st.session_state.get('show_image_files')
         logger.info(f"show images value type: {type(list(show_image_files.values())[0])}")

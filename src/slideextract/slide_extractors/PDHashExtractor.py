@@ -79,12 +79,16 @@ class PDHashExtractor(BaseSlideExtractor):
 
         combined_df = hash_new_slide_df.copy()
         combined_df['duration'] = combined_df['index'].diff(-1).fillna(0) * -1
+        combined_df['duration'] = combined_df['duration'].apply(lambda x : x if x != 0 else 0)
         combined_df.loc[0,'duration'] = combined_df['index'].min()
         combined_df['duration_str'] = combined_df['duration'].apply(lambda duration: str(duration//60) + 'min' + str(duration%60)+"s")
+        if combined_df.shape[0] > combined_df.dropna().shape[0]:
+            logger.warning(f"dropping {combined_df.shape[0] - combined_df.dropna().shape[0]} rows with NaN values")
         combined_df = combined_df.dropna()
 
         # export combined_df to csv
         self.combined_df = combined_df
+        combined_df.index = combined_df['index']
         combined_df.to_csv(os.path.join(self.data_file_path,'combined_df.csv'), index=False)
 
         new_slide_indices = self.combined_df.query("is_new_slide")['index'].tolist()
