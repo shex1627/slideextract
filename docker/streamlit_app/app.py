@@ -10,13 +10,17 @@ import pytube
 import re
 from typing import Dict
 import io
+from youtube_transcript_api import YouTubeTranscriptApi
 
+
+from slideextract.slide_extractors.image_to_ppt import create_pptx_with_transcript
 from streamlit_util import *
 from slideextract.config import VALID_YOUTUBE_CHANNELS, MAX_VIDEO_DURATION, YOUTUBE_VIDEO_DOWNLOAD_PATH, SLIDE_EXTRACT_OUTPUT_BUCKET_NAME
 from slideextract.slide_extractors.PDHashOCRFunnel import PDHashOCRFunnel
 from slideextract.slide_extractors.PDHashExtractor import PDHashExtractor
 from slideextract.slide_extractors.image_to_ppt import create_pptx
 from slideextract.ocr.textractOcr import textractOcr
+from slideextract.processing.transcript import reformat_paragraph, combine_transcript_slides
 
 #disable caching for so container doesn't expode
 #@st.cache_data(show_spinner="Processing Youtube Video")
@@ -146,7 +150,15 @@ def app():
 
         # create a file buffer to store the presentation
         buffer = io.BytesIO()
-        prs = create_pptx(show_image_files)
+
+        video_id = link.split("?v=")[1]
+        raw_transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        if raw_transcript:
+            index_to_transcript = {index: reformat_paragraph(transcript.replace("\n", " ")) 
+                for index, transcript in combine_transcript_slides(raw_transcript, [0]+ list(show_image_files)).items()}
+            prs = create_pptx_with_transcript(show_image_files, index_to_transcript) 
+        else:
+            prs = create_pptx(show_image_files)
         # save the presentation to the file buffer
         prs.save(buffer)
 

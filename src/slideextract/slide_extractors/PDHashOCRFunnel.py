@@ -105,7 +105,7 @@ class PDHashOCRFunnel(BaseSlideExtractor):
         hash_ocr_combined_df.to_csv(os.path.join(self.data_file_path,'hash_ocr_combined_df.csv'), index=False)
 
         combined_df = hash_ocr_combined_df.query("ocr_is_new_slide").copy()
-        combined_df['duration'] = combined_df['index'].diff(-1).fillna(combined_df['index'].min()) * -1
+        combined_df['duration'] = combined_df['index'].diff(-1).fillna(0) * -1
         combined_df.loc[0,'duration'] = combined_df['index'].min()
         combined_df['duration'] = combined_df['duration'].apply(lambda x : x if x != 0 else 0)
         combined_df['duration_str'] = combined_df['duration'].apply(lambda duration: str(duration//60) + 'min' + str(duration%60)+"s")
@@ -114,6 +114,7 @@ class PDHashOCRFunnel(BaseSlideExtractor):
         if combined_df.shape[0] > combined_df.dropna().shape[0]:
             logger.warning(f"dropping {combined_df.shape[0] - combined_df.dropna().shape[0]} rows with NaN values")
         combined_df = combined_df.dropna()
+
 
         combined_df['is_new_slide'] = combined_df['enough_words_in_slide'] & combined_df['enough_duration_in_slide']
         combined_df.index = combined_df['index']
