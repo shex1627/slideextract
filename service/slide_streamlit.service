@@ -1,0 +1,12 @@
+[Unit]
+Description=slideextract
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/shichenh/miniconda3/envs/slideextract/bin/python run -m streamlit run app.py
+WorkingDirectory=/opt/shichenh/slideextract/docker/streamlit_app
+User=shichenh
+
+[Install]
+WantedBy=default.target
