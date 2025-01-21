@@ -1,3 +1,4 @@
+print("importing")
 import streamlit as st
 from PIL import Image
 from pathlib import Path
@@ -14,28 +15,34 @@ from youtube_transcript_api import YouTubeTranscriptApi
 
 
 from slideextract.slide_extractors.image_to_ppt import create_pptx_with_transcript
-from streamlit_util import *
+from streamlit_util import format_duration, is_valid_youtube_link, is_valid_channel, get_videolink, highlight_text, within_duration_limit
 from slideextract.config import VALID_YOUTUBE_CHANNELS, MAX_VIDEO_DURATION, YOUTUBE_VIDEO_DOWNLOAD_PATH, SLIDE_EXTRACT_OUTPUT_BUCKET_NAME
 from slideextract.slide_extractors.PDHashOCRFunnel import PDHashOCRFunnel
 from slideextract.slide_extractors.PDHashExtractor import PDHashExtractor
 from slideextract.slide_extractors.image_to_ppt import create_pptx
 from slideextract.ocr.textractOcr import textractOcr
 from slideextract.processing.transcript import reformat_paragraph, combine_transcript_slides
+from slideextract.processing.youtube import download_youtube_video as download_youtube_video_with_yt
 
+print("finished importing")
 #disable caching for so container doesn't expode
 #@st.cache_data(show_spinner="Processing Youtube Video")
+# def download_youtube_video(link, output_path: str="./youtube_downloads"):
+#     with st.spinner("Downloading Youtube Video"):
+#         yt = pytube.YouTube(link)
+#         title = yt.title.lower().replace(" ","_")
+#         filename = re.sub('[^A-Za-z0-9_]+', '', title) + ".mp4"
+
+#         logger.info(f"resolutions: {yt.streams.filter(progressive=True)}")
+#         stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
+#         stream.download(output_path=output_path, filename=filename)
+#     return os.path.join(output_path, filename)
+
 def download_youtube_video(link, output_path: str="./youtube_downloads"):
     with st.spinner("Downloading Youtube Video"):
-        yt = pytube.YouTube(link)
-        title = yt.title.lower().replace(" ","_")
-        filename = re.sub('[^A-Za-z0-9_]+', '', title) + ".mp4"
+        return download_youtube_video_with_yt(link, output_path)
 
-        logger.info(f"resolutions: {yt.streams.filter(progressive=True)}")
-        stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
-        stream.download(output_path=output_path, filename=filename)
-    return os.path.join(output_path, filename)
-
-logger = logging.getLogger("streamlit app")
+logger = logging.getLogger()
 
 # define a function ti display image metadata
 def display_metadata(metadata):
@@ -75,6 +82,7 @@ def run_slide_extraction(mp4_path: str, with_ocr: bool = True):
 
 # Define the streamlit app
 def app():
+    print("running app")
     st.set_page_config(page_title="Recording Slide Extractor", page_icon=":camera_flash:", layout='wide')
     st.write("## Recording Slide Extractor")
 
@@ -176,5 +184,5 @@ def app():
         display_images(files, st.session_state.get('show_image_files'))
         
 
-app()
-
+if __name__ == "__main__":
+    app()
