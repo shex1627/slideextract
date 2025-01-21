@@ -22,7 +22,7 @@ DATA_FILE_PATH = os.environ.get("DATA_FILE_PATH", "C:\\Users\\alistar\\Desktop\\
 YOUTUBE_VIDEO_DOWNLOAD_PATH = os.environ.get("YOUTUBE_VIDEO_DOWNLOAD_PATH", "./youtube_downloads")
 SLIDE_EXTRACT_OUTPUT_BUCKET_NAME = os.environ.get("SLIDE_EXTRACT_OUTPUT_BUCKET_NAME", "slide-extract-output")
 DEFAULT_YOUTUBE_CHANNELS = "" #['PyData', 'Open Data Science', 'Kaggle', 'AWS Online Tech Talks', 'Microsoft Ignite', 'Microsoft']
-VALID_YOUTUBE_CHANNELS = os.environ.get("VALID_YOUTUBE_CHANNELS", "").split(",") if os.environ.get("VALID_YOUTUBE_CHANNELS") else []
-MAX_VIDEO_DURATION = 3800
+VALID_YOUTUBE_CHANNELS = [] #os.environ.get("VALID_YOUTUBE_CHANNELS", "").split(",") if os.environ.get("VALID_YOUTUBE_CHANNELS") else []
+MAX_VIDEO_DURATION = 7200
 
 
