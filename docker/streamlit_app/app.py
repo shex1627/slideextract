@@ -1,4 +1,3 @@
-print("importing")
 import streamlit as st
 from PIL import Image
 from pathlib import Path
@@ -61,7 +60,7 @@ def display_images(images_metadata: Dict, image_data: Dict):
         with cols[i % NUM_COLUMNS]:
             st.write(f"## {metadata['name']}, Duration {metadata['duration']}")
             #display_metadata(metadata)
-            st.image(image_data[metadata['image_index']], use_column_width=True, caption=metadata['duration'], width=150, output_format='PNG')
+            st.image(image_data[metadata['image_index']], use_container_width=True, caption=metadata['duration'], width=150, output_format='PNG')
 
 
 #@st.cache_data(show_spinner="Extracting Slides, Usually takes 3-6min for a new video")

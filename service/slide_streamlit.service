@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/opt/shichenh/miniconda3/envs/slideextract/bin/python -m streamlit run app.py --server.port 8502
-WorkingDirectory=/opt/shichenh/slideextract/docker/streamlit_app
-EnvironmentFile=/opt/shichenh/slideextract/service/slide.env
+ExecStart=//home/bookworm/.pyenv/versions/3.9.18/envs/slideextract/bin/python -m streamlit run app.py --server.port 8520
+WorkingDirectory=/home/bookworm/code/slideextract/docker/streamlit_app
+EnvironmentFile=/home/bookworm/code/service/slide.env
 
 [Install]
 WantedBy=default.target

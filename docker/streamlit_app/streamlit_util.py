@@ -6,7 +6,26 @@ import os
 import streamlit as st
 # import tkinter as tk
 # from tkinter import filedialog
+from yt_dlp import YoutubeDL
 
+def within_duration_limit(url: str, duration_limit=3800):
+    """
+    check if a youtube url exceed duration limit
+    duration_limit: in seconds 
+    """
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'extract_flat': True
+    }
+    
+    with YoutubeDL(ydl_opts) as ydl:
+        try:
+            info = ydl.extract_info(url, download=False)
+            duration_in_seconds = info.get('duration', 0)
+            return duration_in_seconds <= duration_limit
+        except Exception:
+            return False
 
 def format_duration(seconds: int) -> str:
     """
@@ -67,16 +86,6 @@ def is_valid_channel(url: str, channels: List[str]) -> bool:
     else:
         return False
 
-
-def within_duration_limit(url: str, duration_limit=3800):
-    """
-    check if a youtube url exceed duration limit
-    duration_limit: in seconds 
-    """
-    yt = YouTube(url)
-    duration_in_seconds = yt.length
-    return duration_in_seconds <= duration_limit
-
 def highlight_text(word_to_highlight: str):
     """
     Returns the text with the word highlighted using HTML tags.
@@ -95,7 +104,7 @@ import streamlit as st
 
 def get_videolink():
     # Get the query parameter from the URL
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params
     video_id = query_params.get('video_id', [''])[0]
 
     # Define the regex pattern for matching YouTube video IDs

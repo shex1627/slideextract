@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=cloudflared tunnel --config /opt/shichenh/.cloudflared/slide_config.yml run
+ExecStart=cloudflared tunnel --config /home/bookworm/.cloudflared/slide.yml run
 Restart=always
 RestartSec=3
 
